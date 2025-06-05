@@ -4,6 +4,17 @@ import numpy as np
 import pickle 
 from sklearn.preprocessing import StandardScaler , LabelEncoder
 
+#For coonecting to mongodb to store the user data and output result
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+
+uri = "mongodb+srv://Anurag:Anurag1234@cluster0.bagh3cm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(uri, server_api=ServerApi('1'))
+db = client["Student"]                                                              #creating the databse 
+collections = db["Student_prediction"]                                              #creating the collection variable to store the data
+
+
+
 #writing the function to load the model 
 def load_model():
     with open("Student_LR_Final_Model.pkl","rb") as file:
@@ -47,6 +58,14 @@ def main():
         }
         prediction = predict_data(user_data)
         st.success(f"Your prediction result is {prediction}")
+        user_data["prediction"] = float(prediction)                                                                                                                            #user data me prediction data ko add kro 
+
+        # Imagine you have a big box of toys (that's called user_data), and each toy has a name tag on it. But sometimes the name tags are written in a special computer language that's hard to read.
+        # This code is like having a helpful friend who goes through your toy box and rewrites all the name tags in regular English so everyone can understand them better.
+        user_data = {key: int(value) if isinstance(value , np.integer) else float(value) if isinstance(value , np.floating) else value for key , value in user_data.items()}   
+
+
+        collections.insert_one(user_data)                                                                                                                                      #mongodb ke collections variable me store krdo pure data ko 
 #To execute the above url function line 
 if __name__ == "__main__" :
     main()
