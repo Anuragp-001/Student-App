@@ -2,59 +2,59 @@ import streamlit as st
 import pandas as pd 
 import numpy as np 
 import pickle 
-from sklearn.preprocessing import StandardScaler , LabelEncoder
+from sklearn.preprocessing import StandardScaler
 
-#For coonecting to mongodb to store the user data and output result
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
-
-uri = "mongodb+srv://Anurag:Anurag1234@cluster0.bagh3cm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-client = MongoClient(uri, server_api=ServerApi('1'))
-db = client["Student"]                                                              #creating the databse 
-collections = db["Student_prediction"]                                              #creating the collection variable to store the data
-
-
-
-#writing the function to load the model 
+# Writing the function to load the model 
 def load_model():
-    with open("Student_LR_Final_Model.pkl","rb") as file:
-        model,scaller, le = pickle.load(file)
-        return model , scaller , le
-
-#writing a function where user fill thier choice of data and then get converted into our tranformed data i.e user fill yes or no and we get 1 or 0 
-def preprocessing_input_data(data , scaller , le) :
-    data["Extracurricular Activities"] = le.transform([data["Extracurricular Activities"]])[0]
+    with open("diabetes_prediction.pkl","rb") as file:
+        model, scaler = pickle.load(file)
+        return model, scaler
+    
+# Writing a function where user fill their choice of data and then get converted into our transformed data 
+def preprocessing_input_data(data, scaler):
+    # Create DataFrame with proper column names and values
     df = pd.DataFrame([data])
-    df_transform = scaller.transform(df)
+    df_transform = scaler.transform(df)
     return df_transform
 
-#writing a predict function 
+# Writing a predict function 
 def predict_data(data):
-    model,scaller, le = load_model()
-    process_data = preprocessing_input_data(data,scaller, le)
-    prediction = model.predict(process_data)
+    lasso_model, scaler = load_model()
+    process_data = preprocessing_input_data(data, scaler)
+    prediction = lasso_model.predict(process_data)
     return prediction
 
-#Creating the url for app 
+# Creating the UI for app 
 def main():
-    st.title("Student Performance prediction")
-    st.write("enter your data to get a prediction for your performance")
+    st.title("Diabetes Prediction App")
+    st.write("Enter your data to get a prediction for your diabetes risk")
 
-    #now we are going to create a field where user can fill the data
-    hour_study = st.number_input("Hours Studied", min_value = 1, max_value = 10 , value = 5)
-    previous_score = st.number_input("Previous Scores", min_value = 1, max_value = 100 , value = 70)
-    extr = st.selectbox("Extracurricular Activities",["Yes" , "No"])                                                                              #Point to be noted yes awr no kaa starting letter same hona chahiye nhi to error aa jayega 
-    sleeping_hour = st.number_input("Sleep Hours", min_value = 4, max_value = 10 , value = 7)
-    num_of_paper_solved = st.number_input("Sample Question Papers Practiced", min_value = 0, max_value = 100 , value = 5)
+    # Now we are going to create fields where user can fill the data
+    age = st.number_input("Age", min_value=1, max_value=100, value=35)
+    sex = st.number_input("Sex (0 for Female, 1 for Male)", min_value=0, max_value=1, value=0)
+    bmi = st.number_input("BMI", min_value=10.0, max_value=50.0, value=25.0)  # Fixed: was "sex" instead of "BMI"
+    bp = st.number_input("Blood Pressure", min_value=40, max_value=300, value=120)
+    s1 = st.number_input("S1 (Total Cholesterol)", min_value=0, max_value=500, value=200)
+    s2 = st.number_input("S2 (LDL Cholesterol)", min_value=0, max_value=300, value=100)
+    s3 = st.number_input("S3 (HDL Cholesterol)", min_value=0, max_value=200, value=50)
+    s4 = st.number_input("S4 (Total Cholesterol/HDL)", min_value=0, max_value=20, value=4)
+    s5 = st.number_input("S5 (Log Triglycerides)", min_value=0, max_value=10, value=4)
+    s6 = st.number_input("S6 (Blood Sugar)", min_value=0, max_value=300, value=90)
 
-    #Now we are going to create a button at the bottom which when click send all the user input into the model
-    if st.button("predict-Your-score") :
+    # Now we are going to create a button at the bottom which when clicked sends all the user input into the model
+    if st.button("Predict Your Score"):
+        # Fixed: Values and keys were swapped
         user_data = {
-            "Hours Studied":hour_study,
-            "Previous Scores":previous_score, 
-            "Extracurricular Activities":extr,
-            "Sleep Hours":sleeping_hour,
-            "Sample Question Papers Practiced":num_of_paper_solved 
+            "age": age,
+            "sex": sex,
+            "bmi": bmi,
+            "bp": bp,
+            "s1": s1,
+            "s2": s2,
+            "s3": s3,
+            "s4": s4,
+            "s5": s5,
+            "s6": s6
         }
         prediction = predict_data(user_data)
         st.success(f"Your prediction result is {prediction}")
